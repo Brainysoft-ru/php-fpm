@@ -1,9 +1,24 @@
-# Laradock's PHP-FPM Base Image
+# PHP-FPM Base Image
 
-[![Build Status](https://travis-ci.org/laradock/php-fpm.svg?branch=master)](https://travis-ci.org/laradock/php-fpm)
+## Why?
+PHP 7.1, PHP 7.4: patched configs to be able to set environment variables
 
-[Contribution Guide](http://laradock.io/contributing/#edit-base-image).
+## Available ENV variables and default values
+```
+PHP_MEMORY_LIMIT=128M
+PHP_ALLOW_URL_FOPEN=On
+PHP_UPLOAD_MAX_FILESIZE=2M
+PHP_MAX_FILE_UPLOADS=20
+PHP_POST_MAX_SIZE=8M
+PHP_MAX_INPUT_VARS=1000
+PHP_SHORT_OPEN_TAG=Off
+```
 
-[Workspace Docker Hub Repository](https://hub.docker.com/r/laradock/php-fpm/)
-
-[Laradock Github Repository](https://github.com/Laradock/laradock).
+```
+PHP_FPM_PM=dynamic
+PHP_FPM_PM_MAX_CHILDREN=30
+PHP_FPM_PM_START_SERVERS=2
+PHP_FPM_PM_MIN_SPARE_SERVERS=1
+PHP_FPM_PM_MAX_SPARE_SERVERS=5
+PHP_FPM_PM_MAX_REQUESTS=5
+```
