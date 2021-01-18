@@ -1,0 +1,123 @@
+#
+#--------------------------------------------------------------------------
+# Image Setup
+#--------------------------------------------------------------------------
+#
+
+FROM php:8.0-fpm
+
+# Set Environment Variables
+ENV DEBIAN_FRONTEND noninteractive
+
+#
+#--------------------------------------------------------------------------
+# Software's Installation
+#--------------------------------------------------------------------------
+#
+# Installing tools and PHP extentions using "apt", "docker-php", "pecl",
+#
+
+# Install "curl", "libmemcached-dev", "libpq-dev", "libjpeg-dev",
+#         "libpng-dev", "libfreetype6-dev", "libssl-dev", "libmcrypt-dev",
+RUN set -eux; \
+    apt-get update; \
+    apt-get upgrade -y; \
+    apt-get install -y --no-install-recommends \
+            curl \
+            libmemcached-dev \
+            libz-dev \
+            libpq-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libfreetype6-dev \
+            libssl-dev \
+            libmcrypt-dev \
+            libonig-dev; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    # Install the PHP pdo_mysql extention
+    docker-php-ext-install pdo_mysql; \
+    # Install the PHP pdo_pgsql extention
+    docker-php-ext-install pdo_pgsql; \
+    # Install the PHP gd library
+    docker-php-ext-configure gd \
+            --prefix=/usr \
+            --with-jpeg \
+            --with-freetype; \
+    docker-php-ext-install gd; \
+    php -r 'var_dump(gd_info());'
+
+
+#
+#--------------------------------------------------------------------------
+# Creating patched php.ini to access Docker ENV variables
+#--------------------------------------------------------------------------
+#
+
+RUN cat /usr/local/etc/php/php.ini-production \
+ | sed 's/[; ]*memory_limit = .*/memory_limit = ${PHP_MEMORY_LIMIT}/g' \
+ | sed 's/[; ]*allow_url_fopen = .*/allow_url_fopen = ${PHP_ALLOW_URL_FOPEN}/g' \
+ | sed 's/[; ]*upload_max_filesize = .*/upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}/g' \
+ | sed 's/[; ]*max_file_uploads = .*/max_file_uploads = ${PHP_MAX_FILE_UPLOADS}/g' \
+ | sed 's/[; ]*post_max_size = .*/post_max_size = ${PHP_POST_MAX_SIZE}/g' \
+ | sed 's/[; ]*max_input_vars = .*/max_input_vars = ${PHP_MAX_INPUT_VARS}/g' \
+ | sed 's/[; ]*short_open_tag = .*/short_open_tag = ${PHP_SHORT_OPEN_TAG}/g' \
+ > /usr/local/etc/php/php.ini-production-env \
+ && ln -s /usr/local/etc/php/php.ini-production-env /usr/local/etc/php/php.ini \
+ \
+ && echo "[www] \n\
+pm=\${PHP_FPM_PM} \n\
+pm.max_children=\${PHP_FPM_PM_MAX_CHILDREN} \n\
+pm.start_servers=\${PHP_FPM_PM_START_SERVERS} \n\
+pm.min_spare_servers=\${PHP_FPM_PM_MIN_SPARE_SERVERS} \n\
+pm.max_spare_servers=\${PHP_FPM_PM_MAX_SPARE_SERVERS} \n\
+pm.max_requests=\${PHP_FPM_PM_MAX_REQUESTS}" > /usr/local/etc/php-fpm.d/zz-env.conf \
+ \
+ && echo php.ini && cat /usr/local/etc/php/php.ini \
+ && echo fpm/zz-env.conf && cat /usr/local/etc/php-fpm.d/zz-env.conf
+
+ENV PHP_MEMORY_LIMIT=128M \
+    PHP_ALLOW_URL_FOPEN=On \
+    PHP_UPLOAD_MAX_FILESIZE=2M \
+    PHP_MAX_FILE_UPLOADS=20 \
+    PHP_POST_MAX_SIZE=8M \
+    PHP_MAX_INPUT_VARS=1000 \
+    PHP_SHORT_OPEN_TAG=Off \
+    PHP_FPM_PM=dynamic \
+    PHP_FPM_PM_MAX_CHILDREN=30 \
+    PHP_FPM_PM_START_SERVERS=2 \
+    PHP_FPM_PM_MIN_SPARE_SERVERS=1 \
+    PHP_FPM_PM_MAX_SPARE_SERVERS=5 \
+    PHP_FPM_PM_MAX_REQUESTS=500
+
+
+
+#
+#--------------------------------------------------------------------------
+# Install Opcache
+#--------------------------------------------------------------------------
+#
+
+
+RUN docker-php-ext-install opcache && echo "[opcache] \n\
+opcache.enable=\${PHP_OPCACHE_ENABLE} \n\
+opcache.jit_buffer_size=\${PHP_OPCACHE_JIT_BUFFER_SIZE} \n\
+opcache.revalidate_freq=\${PHP_OPCACHE_REVALIDATE_FREQ} \n\
+opcache.validate_timestamps=\${PHP_OPCACHE_VALIDATE_TIMESTAMPS} \n\
+opcache.max_accelerated_files=\${PHP_OPCACHE_MAX_ACCELERATED_FILES} \n\
+opcache.memory_consumption=\${PHP_OPCACHE_MEMORY_CONSUMPTION} \n\
+opcache.max_wasted_percentage=\${PHP_OPCACHE_MAX_WASTED_PERCENTAGE} \n\
+opcache.interned_strings_buffer=\${PHP_OPCACHE_INTERNED_STRINGS_BUFFER} \n\
+opcache.fast_shutdown=\${PHP_OPCACHE_FAST_SHUTDOWN}" > /usr/local/etc/php/conf.d/zz-opcache.ini
+
+# https://medium.com/appstract/make-your-laravel-app-fly-with-php-opcache-9948db2a5f93
+ENV PHP_OPCACHE_ENABLE=1 \
+    PHP_OPCACHE_JIT_BUFFER_SIZE="512M" \
+    PHP_OPCACHE_REVALIDATE_FREQ=0 \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 \
+    PHP_OPCACHE_MAX_ACCELERATED_FILES=32531 \
+    PHP_OPCACHE_MEMORY_CONSUMPTION=512 \
+    PHP_OPCACHE_MAX_WASTED_PERCENTAGE=15 \
+    PHP_OPCACHE_INTERNED_STRINGS_BUFFER=64 \
+    PHP_OPCACHE_FAST_SHUTDOWN=1
