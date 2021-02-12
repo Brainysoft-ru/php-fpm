@@ -102,6 +102,7 @@ ENV PHP_MEMORY_LIMIT=128M \
 
 RUN docker-php-ext-install opcache && echo "[opcache] \n\
 opcache.enable=\${PHP_OPCACHE_ENABLE} \n\
+opcache.enable_cli=\${PHP_OPCACHE_ENABLE_CLI} \n\
 opcache.jit_buffer_size=\${PHP_OPCACHE_JIT_BUFFER_SIZE} \n\
 opcache.revalidate_freq=\${PHP_OPCACHE_REVALIDATE_FREQ} \n\
 opcache.validate_timestamps=\${PHP_OPCACHE_VALIDATE_TIMESTAMPS} \n\
@@ -113,6 +114,7 @@ opcache.fast_shutdown=\${PHP_OPCACHE_FAST_SHUTDOWN}" > /usr/local/etc/php/conf.d
 
 # https://medium.com/appstract/make-your-laravel-app-fly-with-php-opcache-9948db2a5f93
 ENV PHP_OPCACHE_ENABLE=1 \
+    PHP_OPCACHE_ENABLE_CLI=1 \
     PHP_OPCACHE_JIT_BUFFER_SIZE="512M" \
     PHP_OPCACHE_REVALIDATE_FREQ=0 \
     PHP_OPCACHE_VALIDATE_TIMESTAMPS=0 \
