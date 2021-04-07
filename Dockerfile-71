@@ -76,7 +76,9 @@ pm.max_children=\${PHP_FPM_PM_MAX_CHILDREN} \n\
 pm.start_servers=\${PHP_FPM_PM_START_SERVERS} \n\
 pm.min_spare_servers=\${PHP_FPM_PM_MIN_SPARE_SERVERS} \n\
 pm.max_spare_servers=\${PHP_FPM_PM_MAX_SPARE_SERVERS} \n\
-pm.max_requests=\${PHP_FPM_PM_MAX_REQUESTS}" > /usr/local/etc/php-fpm.d/zz-env.conf \
+pm.max_requests=\${PHP_FPM_PM_MAX_REQUESTS} \n\
+request_terminate_timeout=\${PHP_FPM_REQUEST_TERMINATE_TIMEOUT} \n\
+" > /usr/local/etc/php-fpm.d/zz-env.conf \
  \
  && echo php.ini && cat /usr/local/etc/php/php.ini \
  && echo fpm/zz-env.conf && cat /usr/local/etc/php-fpm.d/zz-env.conf
@@ -93,4 +95,5 @@ ENV PHP_MEMORY_LIMIT=128M \
     PHP_FPM_PM_START_SERVERS=2 \
     PHP_FPM_PM_MIN_SPARE_SERVERS=1 \
     PHP_FPM_PM_MAX_SPARE_SERVERS=5 \
-    PHP_FPM_PM_MAX_REQUESTS=500
+    PHP_FPM_PM_MAX_REQUESTS=500 \
+    PHP_FPM_REQUEST_TERMINATE_TIMEOUT=120s
